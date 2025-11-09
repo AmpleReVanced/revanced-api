@@ -1,5 +1,5 @@
 # Build the application
-FROM gradle:latest AS build
+FROM gradle:8-jdk21 AS build
 
 ARG GITHUB_ACTOR
 ARG GITHUB_TOKEN
