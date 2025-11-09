@@ -1,6 +1,5 @@
 package app.revanced.api.configuration.routes
 
-import app.revanced.api.configuration.ApiAssetPublicKey
 import app.revanced.api.configuration.ApiRelease
 import app.revanced.api.configuration.ApiReleaseVersion
 import app.revanced.api.configuration.installCache
@@ -48,18 +47,6 @@ internal fun Route.patchesRoute() = route("patches") {
                 val prerelease = call.parameters["prerelease"]?.toBoolean() ?: false
 
                 call.respondBytes(ContentType.Application.Json) { patchesService.list(prerelease) }
-            }
-        }
-    }
-
-    rateLimit(RateLimitName("strong")) {
-        route("keys") {
-            installCache(356.days)
-
-            installPatchesPublicKeyRouteDocumentation()
-
-            get {
-                call.respond(patchesService.publicKey())
             }
         }
     }
@@ -121,17 +108,4 @@ private fun Route.installPatchesListRouteDocumentation() = installNotarizedRoute
     }
 }
 
-private fun Route.installPatchesPublicKeyRouteDocumentation() = installNotarizedRoute {
-    tags = setOf("Patches")
 
-    get = GetInfo.builder {
-        description("Get the public keys for verifying patches assets")
-        summary("Get patches public keys")
-        response {
-            description("The public keys")
-            mediaTypes("application/json")
-            responseCode(HttpStatusCode.OK)
-            responseType<ApiAssetPublicKey>()
-        }
-    }
-}

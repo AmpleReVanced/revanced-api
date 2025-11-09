@@ -15,7 +15,6 @@ import java.io.ByteArrayOutputStream
 import java.net.URL
 
 internal class PatchesService(
-    private val signatureService: SignatureService,
     private val backendRepository: BackendRepository,
     private val configurationRepository: ConfigurationRepository,
 ) {
@@ -31,7 +30,7 @@ internal class PatchesService(
             patchesRelease.createdAt,
             patchesRelease.releaseNote,
             patchesRelease.assets.first(configurationRepository.patches.assetRegex).downloadUrl,
-            patchesRelease.assets.first(configurationRepository.patches.signatureAssetRegex).downloadUrl,
+            null,
         )
     }
 
@@ -62,26 +61,12 @@ internal class PatchesService(
                 val patchesDownloadUrl = patchesRelease.assets
                     .first(configurationRepository.patches.assetRegex).downloadUrl
 
-                val signatureDownloadUrl = patchesRelease.assets
-                    .first(configurationRepository.patches.signatureAssetRegex).downloadUrl
-
                 val patchesFile = kotlin.io.path.createTempFile().toFile().apply {
                     outputStream().use { URL(patchesDownloadUrl).openStream().copyTo(it) }
                 }
 
-                val patches = if (
-                    signatureService.verify(
-                        patchesFile,
-                        signatureDownloadUrl,
-                        configurationRepository.patches.publicKeyFile,
-                        configurationRepository.patches.publicKeyId,
-                    )
-                ) {
-                    loadPatchesFromJar(setOf(patchesFile))
-                } else {
-                    // Use an empty set of patches if the signature is invalid.
-                    emptySet()
-                }
+                // Load patches without signature verification.
+                val patches = loadPatchesFromJar(setOf(patchesFile))
 
                 patchesFile.delete()
 
